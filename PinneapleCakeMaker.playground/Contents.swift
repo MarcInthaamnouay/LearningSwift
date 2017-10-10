@@ -1,6 +1,8 @@
 //: Playground - noun: a place where people can play
 
 import UIKit
+import PlaygroundSupport
+
 
 /**
  Define the constant to use on the playground
@@ -25,6 +27,9 @@ struct Const {
     ]
 }
 
+/**
+ Defining the method link to the Const struct
+ */
 extension Const {
     
     /**
@@ -49,6 +54,10 @@ extension Const {
     }
 }
 
+/**
+ Pineapple Error
+    only one error ha..
+ */
 enum PineappleError: Error {
     case unknownManufacturer
 }
@@ -77,11 +86,11 @@ enum PineappleType {
         case .cayenne:
             return Pineapple(name: "Cayenne", origin: "Venezuela", cultivationCountry: nil, jamColor: UIColor.PinneapleJamColor.sunnyJam)
         case .queen:
-            return Pineapple(name: "Queen", origin: "Malaysia", cultivationCountry: nil, jamColor: UIColor.PinneapleJamColor.sunnyJam)
+            return Pineapple(name: "Queen", origin: "Malaysia", cultivationCountry: nil, jamColor: UIColor.PinneapleJamColor.juicyJam)
         case .redSpanish:
-            return Pineapple(name: "Red Spannish", origin: "Mexico", cultivationCountry: nil, jamColor: UIColor.PinneapleJamColor.sunnyJam)
+            return Pineapple(name: "Red Spannish", origin: "Mexico", cultivationCountry: nil, jamColor: UIColor.PinneapleJamColor.honeyJam)
         case .abacaxi:
-            return Pineapple(name: "Abacaxi", origin: "Brazil", cultivationCountry: nil, jamColor: UIColor.PinneapleJamColor.sunnyJam)
+            return Pineapple(name: "Abacaxi", origin: "Brazil", cultivationCountry: nil, jamColor: UIColor.PinneapleJamColor.redJam)
         }
     }
 }
@@ -154,6 +163,11 @@ enum ManufacturerList: String {
     }
 }
 
+/**
+ Basic Ingredient
+ 
+ Define the basic ingredient for a pineapple cake
+ */
 enum BasicIngredient {
     case butter
     case eggYolk
@@ -186,6 +200,9 @@ enum BasicIngredient {
     }
 }
 
+/**
+ Pineapple
+ */
 struct Pineapple {
     var name  : String
     var origin: String?
@@ -203,6 +220,9 @@ struct Pineapple {
     }
 }
 
+/**
+ Manufacturer
+ */
 struct Manufacturer {
     var name   : String
     var city   : String
@@ -228,11 +248,17 @@ struct Manufacturer {
     }
 }
 
+/**
+ Ingredient
+ */
 struct Ingredient {
     var name    : String
     var calories: Double
 }
 
+/**
+ Cake
+ */
 struct Cake {
     var pinneappleType: Pineapple
     var manufacturer  : Manufacturer
@@ -246,7 +272,7 @@ struct Cake {
         - type: Pinneaple, a type of pineapple
         - seller: A manufacturer
      */
-    init(type: Pineapple, seller: Manufacturer) {
+    init(type: Pineapple, seller: Manufacturer, color: UIColor) {
         self.pinneappleType = type
         self.manufacturer = seller
         self.ingredientList = [
@@ -254,6 +280,7 @@ struct Cake {
             BasicIngredient.eggYolk.getBasicIngredient(),
             BasicIngredient.flour.getBasicIngredient()
         ]
+        self.pastryColor = color
     }
     
     /**
@@ -300,10 +327,13 @@ extension UIColor {
     }
 }
 
+/**
+ Cake Size
+ */
 enum CakeSize: CGFloat {
-    case ten = 10
-    case twy = 20
-    case thy = 30
+    case ten = 40
+    case twy = 60
+    case thy = 100
 }
 
 
@@ -322,24 +352,67 @@ class UIHandler {
      Init
      */
     init(size: CakeSize) {
+        
         self.view = UIView(frame: CGRect(x: 0.0, y: 0.0, width: self.width, height: self.height))
-        self.cake = UIView(frame: CGRect(x: self.width / 2, y: self.height / 2, width: size.rawValue, height: size.rawValue))
+        self.cake = UIView(frame: CGRect(x: self.width / 2 - size.rawValue , y: self.height / 2 - size.rawValue, width: size.rawValue, height: size.rawValue))
     }
     
-    func setBackground() {
-    
-    }
-    
+    /**
+     Make Cake
+        - parameters:
+            - cake: Cake
+     */
     func makeCake(cake: Cake) {
+        self.view.backgroundColor = UIColor.white
         // Draw the cake
         self.cake.layer.cornerRadius = 5.0
         self.cake.backgroundColor = cake.pastryColor
+        
+        // Get the jam 
+        let pineappleJam = self.drawInnerCake(pineapple: cake.pinneappleType, size: self.cake.bounds.width)
+        
+        // Adding these 2 view to the main UIView
+        self.cake.addSubview(pineappleJam)
+        self.view.addSubview(self.cake)
     }
     
+    /**
+     draw Inner Cake
+        - parameters:
+            - pineapple: Pineapple
+            - size: CakeSize
+     
+        - returns:
+            - UIView
+     */
+    private func drawInnerCake(pineapple: Pineapple, size: CGFloat) -> UIView {
+        let jamSize = size / 2
+        let xyValue = jamSize / 2
+   
+        let pineappleJam = UIView(frame: CGRect(x: xyValue, y: xyValue, width: jamSize, height: jamSize))
+        pineappleJam.backgroundColor = pineapple.jamColor
+        pineappleJam.layer.cornerRadius = 20
+        
+        return pineappleJam
+    }
+    
+    func render() {
+        PlaygroundPage.current.liveView = self.view
+    }
 }
 
+// Test
+// Creating pineapple
+let cayenne = PineappleType.cayenne.getPinneapleByType()
+// Creating company
+let company = try ManufacturerList.taipei.getManufacturerByName(name: "新東陽")
+// Creating cake
+let cake = Cake(type: cayenne, seller: company, color: UIColor.PastryColor.mandarin)
 
-
+// Appening the cake to the view
+let ui = UIHandler(size: CakeSize.thy)
+ui.makeCake(cake: cake)
+ui.render()
 
 
 

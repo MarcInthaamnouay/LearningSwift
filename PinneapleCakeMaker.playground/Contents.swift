@@ -19,7 +19,6 @@ struct Const {
     
     // Ranking of some manufacturer
     static var manufacturerRanking: [String: Int] = [
-        "佳德": 7,
         "新東陽": 7,
         "佳德": 10,
         "台北犁記": 8
@@ -76,13 +75,13 @@ enum PineappleType {
     func getPinneapleByType() -> Pineapple {
         switch self {
         case .cayenne:
-            return Pineapple(name: "Cayenne", origin: "Venezuela", cultivationCountry: nil)
+            return Pineapple(name: "Cayenne", origin: "Venezuela", cultivationCountry: nil, jamColor: UIColor.PinneapleJamColor.sunnyJam)
         case .queen:
-            return Pineapple(name: "Queen", origin: "Malaysia", cultivationCountry: nil)
+            return Pineapple(name: "Queen", origin: "Malaysia", cultivationCountry: nil, jamColor: UIColor.PinneapleJamColor.sunnyJam)
         case .redSpanish:
-            return Pineapple(name: "Red Spannish", origin: "Mexico", cultivationCountry: nil)
+            return Pineapple(name: "Red Spannish", origin: "Mexico", cultivationCountry: nil, jamColor: UIColor.PinneapleJamColor.sunnyJam)
         case .abacaxi:
-            return Pineapple(name: "Abacaxi", origin: "Brazil", cultivationCountry: nil)
+            return Pineapple(name: "Abacaxi", origin: "Brazil", cultivationCountry: nil, jamColor: UIColor.PinneapleJamColor.sunnyJam)
         }
     }
 }
@@ -105,7 +104,6 @@ enum ManufacturerList: String {
      */
     private func getRanking(name: String) -> Int? {
         let rank = Const.manufacturerRanking.filter{$0.key == name}
-        
         if (rank.count == 0) {
             return nil
         }
@@ -133,6 +131,7 @@ enum ManufacturerList: String {
            throw PineappleError.unknownManufacturer
         }
         
+        
         return Manufacturer(
             name: manName![0],
             city: self.rawValue,
@@ -147,7 +146,11 @@ enum ManufacturerList: String {
         - Array of String with the name of the manufacturer
      */
     func getAllManufacturerByCity() -> [String] {
-        return Const.manufacturerList[self.rawValue]!
+        if let cityManufacturer = Const.manufacturerList[self.rawValue] {
+            return cityManufacturer
+        }
+        
+        return []
     }
 }
 
@@ -187,12 +190,42 @@ struct Pineapple {
     var name  : String
     var origin: String?
     var cultivationCountry: String?
+    var jamColor: UIColor
+    
+    /**
+     Set Cultivation Country
+     
+     - parameters: 
+        - country: a name of a country
+     */
+    mutating func setCultivationCountry(country: String) {
+        self.cultivationCountry = country
+    }
 }
 
 struct Manufacturer {
     var name   : String
     var city   : String
     var ranking: Int?
+    
+    mutating func setRanking(rank: Int) {
+        self.ranking = rank
+    }
+    
+    /**
+     Push Ranking push a new raking in the list
+     */
+    private func pushRanking() {
+        let presence = Const.manufacturerRanking.filter{$0.key == self.name}
+        
+        if (presence.count == 0) {
+            return;
+        }
+        
+        if let unwrapRank = self.ranking {
+            Const.manufacturerRanking[self.name] = unwrapRank
+        }
+    }
 }
 
 struct Ingredient {
@@ -204,6 +237,7 @@ struct Cake {
     var pinneappleType: Pineapple
     var manufacturer  : Manufacturer
     var ingredientList: [Ingredient]?
+    var pastryColor   : UIColor?
     
     /**
      Init: We override the init as we want to have already some properties in the ingredientList
@@ -221,8 +255,91 @@ struct Cake {
             BasicIngredient.flour.getBasicIngredient()
         ]
     }
+    
+    /**
+     Return the most caloric ingredient
+     
+     - returns:
+        - maxCaloricIng: return a the most caloric ingredient of the List
+     */
+    func getMostCaloricIngredient() -> Ingredient? {
+        let maxCaloricIng = self.ingredientList?.max{a, b in a.calories < b.calories}
+        
+        return maxCaloricIng
+    }
+    
+    /**
+     Return the total calories
+     
+     - returns:
+        - totalCalories: Optional
+     */
+    func getTotalCalories() -> Double? {
+        let caloriesMap   = self.ingredientList?.map{$0.calories}
+        let totalCalories = caloriesMap?.reduce(0) {return $0 + $1}
+        
+        return totalCalories
+    }
 }
 
-// UI below
+// UI ---------
+
+// Extends the UIColor to add the pineapple cake color
+extension UIColor {
+    struct PastryColor {
+        static let mandarin = UIColor(red:0.97, green:0.77, blue:0.56, alpha:1.00)
+        static let crumble  = UIColor(red:0.97, green:0.90, blue:0.65, alpha:1.00)
+        static let sanguine = UIColor(red:0.89, green:0.46, blue:0.40, alpha:1.00)
+    }
+    
+    struct PinneapleJamColor {
+        static let sunnyJam = UIColor(red:0.96, green:0.81, blue:0.28, alpha:1.00)
+        static let juicyJam = UIColor(red:0.93, green:0.72, blue:0.18, alpha:1.00)
+        static let honeyJam = UIColor(red:0.73, green:0.52, blue:0.20, alpha:1.00)
+        static let redJam   = UIColor(red:0.84, green:0.36, blue:0.14, alpha:1.00)
+    }
+}
+
+enum CakeSize: CGFloat {
+    case ten = 10
+    case twy = 20
+    case thy = 30
+}
+
+
+/**
+ UIHandler
+ */
+class UIHandler {
+    
+    // inner properties
+    let width  = UIScreen.main.bounds.width
+    let height = UIScreen.main.bounds.height
+    let view : UIView
+    let cake : UIView
+    
+    /**
+     Init
+     */
+    init(size: CakeSize) {
+        self.view = UIView(frame: CGRect(x: 0.0, y: 0.0, width: self.width, height: self.height))
+        self.cake = UIView(frame: CGRect(x: self.width / 2, y: self.height / 2, width: size.rawValue, height: size.rawValue))
+    }
+    
+    func setBackground() {
+    
+    }
+    
+    func makeCake(cake: Cake) {
+        // Draw the cake
+        self.cake.layer.cornerRadius = 5.0
+        self.cake.backgroundColor = cake.pastryColor
+    }
+    
+}
+
+
+
+
 
 
